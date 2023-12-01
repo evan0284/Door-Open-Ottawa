@@ -17,7 +17,7 @@ struct ContentView: View {
     
     @StateObject private var viewModel = LocationModel()
     @StateObject private var buildingModel = BuildingViewModel()
-    
+
     @State private var selectedTab: Tab = .house
     @State private var searchTerm = ""
     
@@ -76,7 +76,8 @@ struct ContentView: View {
 class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var favoriteBuilding: [Building] = []
     @Published var buildings: [Building] = []
-    
+    @EnvironmentObject var buildingModel: BuildingViewModel
+
     private var yourLocation = CLLocationManager()
     var userLocation: CLLocation?
     
@@ -138,24 +139,39 @@ class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         return distanceString
     }
+    
+    
 }
 
 class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var buildings: [Building] = []
     @EnvironmentObject var viewModel: LocationModel
+//    var userLocation: CLLocation?
+
+    @Published var isShuttleFilter = false
+    @Published var isPublicWashroomsFilter = false
+    @Published var isAccessibleFilter = false
+    @Published var isFreeParkingFilter = false
+    @Published var isBikeParkingFilter = false
+    @Published var isPaidParkingFilter = false
+    @Published var isGuidedTourFilter = false
+    @Published var isFamilyFriendlyFilter = false
+    @Published var isNewFilter = false
+    
+    @Published var selectedCategoryFilter: Int? = nil
+
     
     
     enum SortOption: String, CaseIterable {
         case alphabetical = "Alphabetical"
         case distance = "Distance"
     }
+    
+
     // Sorting
     @Published var selectedSortOption: SortOption = .alphabetical
     
-    // Filters
-    @Published var isShuttleFilter = false
-    @Published var isPublicWashroomsFilter = false
-
+   
     func fetchData() {
         print("Fetching data...")
 
@@ -183,6 +199,35 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         buildings = sortedBuildings()
     }
 
+    func categoryName(for categoryId: Int) -> String {
+        switch categoryId {
+        case 0:
+            return "Religious buildings"
+        case 1:
+            return "Embassies"
+        case 2:
+            return "Government buildings"
+        case 3:
+            return "Functional buildings"
+        case 4:
+            return "Galleries and Theatres"
+        case 5:
+            return "Academic Institutions"
+        case 6:
+            return "Sports and Leisure buildings"
+        case 7:
+            return "Community and/or Care centres"
+        case 8:
+            return "Business and/or Foundations"
+        case 9:
+            return "Museums, Archives and Historic Sites"
+        case 10:
+            return "Other"
+        default:
+            return "Unknown Category"
+        }
+    }
+    
     // Use the existing fetchData method
 
     func sortedBuildings() -> [Building] {
@@ -190,9 +235,7 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .alphabetical:
             return buildings.sorted { $0.name < $1.name }
         case .distance:
-            // Implement sorting by distance based on user's location
-            // You may want to update your BuildingViewModel to handle distance calculation
-            return buildings.sorted { viewModel.calculateDistance(to: $0) < viewModel.calculateDistance(to: $1) }
+            return buildings.sorted { $0.name < $1.name }
 
         }
     }
@@ -201,12 +244,47 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         buildings.filter { building in
             let shuttleFilter = !isShuttleFilter || building.isShuttle
             let publicWashroomsFilter = !isPublicWashroomsFilter || building.isPublicWashrooms
-            // Add similar filters for other features
+            let accessibleFilter = !isAccessibleFilter || building.isAccessible
+            let freeParkingFilter = !isFreeParkingFilter || building.isFreeParking
+            let bikeParkingFilter = !isBikeParkingFilter || building.isBikeParking
+            let paidParkingFilter = !isPaidParkingFilter || building.isPaidParking
+            let guidedTourFilter = !isGuidedTourFilter || building.isGuidedTour
+            let familyFriendlyFilter = !isFamilyFriendlyFilter || building.isFamilyFriendly
+            
+            
+            let newFilter = !isNewFilter || building.isNew
 
+            let categoryFilter = selectedCategoryFilter == nil || building.categoryId == selectedCategoryFilter
+
+            
+            
             return shuttleFilter &&
-                publicWashroomsFilter
-
+                publicWashroomsFilter &&
+                accessibleFilter &&
+                freeParkingFilter &&
+                bikeParkingFilter &&
+                paidParkingFilter &&
+                guidedTourFilter &&
+                familyFriendlyFilter &&
+                newFilter &&
+                categoryFilter
         }
+    }
+    
+    func resetFilters() {
+        isShuttleFilter = false
+        isPublicWashroomsFilter = false
+        isAccessibleFilter = false
+        isFreeParkingFilter = false
+        isBikeParkingFilter = false
+        isPaidParkingFilter = false
+        isGuidedTourFilter = false
+        isFamilyFriendlyFilter = false
+        isNewFilter = false
+
+        // Add any other filter properties if needed
+
+        sortBuildings() // Apply sorting after resetting filters
     }
     
 }
@@ -246,7 +324,6 @@ struct BuildingsView: View {
                 }
                 .background(Color.white)
                 .cornerRadius(8)
-                .padding(.trailing, 16)
                 .sheet(isPresented: $showSortSheet) {
                     SortSheetView( onClose: {
                         // Perform sorting based on selectedSortOption
@@ -270,7 +347,7 @@ struct BuildingsView: View {
                 ScrollView{
                     VStack(spacing: 16) {
                     
-                        ForEach(buildingModel.buildings.filter { building in
+                        ForEach(buildingModel.filteredBuildings().filter { building in
                             searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
                         }) { building in
                         NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
@@ -308,32 +385,87 @@ struct SortSheetView: View {
 
     
     var body: some View {
-        VStack {
-            Text("Sort By")
-                .font(.headline)
-                .padding()
+        ScrollView {
+            VStack {
+                
+                Picker("Category", selection: $buildingModel.selectedCategoryFilter) {
+                                    Text("All Categories").tag(nil as Int?)
+                                    ForEach([7, 0, 8, 9, 6, 4, 10, 3, 5, 2, 1], id: \.self) { categoryId in
+                                        Text(buildingModel.categoryName(for: categoryId)).tag(categoryId as Int?)
+                                    }
+                                }
+                .pickerStyle(MenuPickerStyle())
+                                .padding()
+                Divider()
 
-            ForEach(BuildingViewModel.SortOption.allCases, id: \.self) { option in
-                Button(action: {
-                    buildingModel.selectedSortOption = option
-                    onClose()
-                }) {
-                    Text(option.rawValue)
-                        .foregroundColor(buildingModel.selectedSortOption == option ? .blue : .black)
-                        .padding()
+                
+                Text("Sort By")
+                    .font(.headline)
+                    .padding()
+
+                ForEach(BuildingViewModel.SortOption.allCases, id: \.self) { option in
+                    Button(action: {
+                        buildingModel.selectedSortOption = option
+                        onClose()
+                    }) {
+                        Text(option.rawValue)
+                            .foregroundColor(buildingModel.selectedSortOption == option ? .blue : .black)
+                    }
                 }
-            }
+                
+                Divider()
 
-            Spacer()
+                HStack() {
+                    Text("Filter by Building Features")
+                        .font(.headline)
+                    .padding(.top)
+                    Spacer()
 
-            Button("Close") {
-                onClose()
+                }
+
+                Toggle("Shuttle", isOn: $buildingModel.isShuttleFilter)
+
+                Toggle("Public Washrooms", isOn: $buildingModel.isPublicWashroomsFilter)
+
+                Toggle("Accessible", isOn: $buildingModel.isAccessibleFilter)
+
+                Toggle("Free Parking", isOn: $buildingModel.isFreeParkingFilter)
+
+                Toggle("Bike Parking", isOn: $buildingModel.isBikeParkingFilter)
+
+                Toggle("Paid Parking", isOn: $buildingModel.isPaidParkingFilter)
+       
+                Toggle("Guided Tour", isOn: $buildingModel.isGuidedTourFilter)
+
+                Toggle("Family Friendly", isOn: $buildingModel.isFamilyFriendlyFilter)
+
+                Toggle("New", isOn: $buildingModel.isNewFilter)
+
+
+                HStack {
+                    Button("Reset") {
+                        // Reset all filters to their default state
+                        buildingModel.resetFilters()
+                    }
+                    .font(.headline)
+                    .padding()
+
+                    Spacer()
+
+                    Button("Confirm") {
+                        onClose()
+                    }
+                    .font(.headline)
+                    .padding()
+                }
+                
+                Divider()
+                
             }
-            .font(.headline)
             .padding()
         }
-        .padding()
     }
+    
 }
 
 
