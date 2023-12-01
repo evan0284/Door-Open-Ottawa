@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "placeHolderLogoFaded.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "placeHolderLogoFaded@2x.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "placeHolderLogoFaded@3x.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
