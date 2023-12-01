@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01BDA6012B17B9BF00BCA286 /* BuildingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BDA6002B17B9BF00BCA286 /* BuildingModel.swift */; };
+		01BDA6032B17B9F300BCA286 /* buildings.json in Resources */ = {isa = PBXBuildFile; fileRef = 01BDA6022B17B9F300BCA286 /* buildings.json */; };
+		01BDA6052B17BACC00BCA286 /* BuildingDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BDA6042B17BACC00BCA286 /* BuildingDetail.swift */; };
+		01BDA6072B17BB4000BCA286 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01BDA6062B17BB4000BCA286 /* CustomTabBar.swift */; };
 		01C5C9292B17A44800FF5CC0 /* mapppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C5C9282B17A44800FF5CC0 /* mapppApp.swift */; };
 		01C5C92B2B17A44800FF5CC0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C5C92A2B17A44800FF5CC0 /* ContentView.swift */; };
 		01C5C92D2B17A44A00FF5CC0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01C5C92C2B17A44A00FF5CC0 /* Assets.xcassets */; };
@@ -34,6 +38,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		01BDA6002B17B9BF00BCA286 /* BuildingModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BuildingModel.swift; sourceTree = "<group>"; };
+		01BDA6022B17B9F300BCA286 /* buildings.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = buildings.json; sourceTree = "<group>"; };
+		01BDA6042B17BACC00BCA286 /* BuildingDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BuildingDetail.swift; sourceTree = "<group>"; };
+		01BDA6062B17BB4000BCA286 /* CustomTabBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		01C5C9252B17A44800FF5CC0 /* mappp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mappp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		01C5C9282B17A44800FF5CC0 /* mapppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mapppApp.swift; sourceTree = "<group>"; };
 		01C5C92A2B17A44800FF5CC0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -95,7 +103,10 @@
 			isa = PBXGroup;
 			children = (
 				01C5C9282B17A44800FF5CC0 /* mapppApp.swift */,
+				01BDA6042B17BACC00BCA286 /* BuildingDetail.swift */,
+				01BDA6062B17BB4000BCA286 /* CustomTabBar.swift */,
 				01C5C92A2B17A44800FF5CC0 /* ContentView.swift */,
+				01BDA6022B17B9F300BCA286 /* buildings.json */,
 				01C5C92C2B17A44A00FF5CC0 /* Assets.xcassets */,
 				01C5C92E2B17A44A00FF5CC0 /* Preview Content */,
 			);
@@ -113,6 +124,7 @@
 		01C5C9382B17A44A00FF5CC0 /* mapppTests */ = {
 			isa = PBXGroup;
 			children = (
+				01BDA6002B17B9BF00BCA286 /* BuildingModel.swift */,
 				01C5C9392B17A44A00FF5CC0 /* mapppTests.swift */,
 			);
 			path = mapppTests;
@@ -232,6 +244,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				01C5C9302B17A44A00FF5CC0 /* Preview Assets.xcassets in Resources */,
+				01BDA6032B17B9F300BCA286 /* buildings.json in Resources */,
 				01C5C92D2B17A44A00FF5CC0 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -257,7 +270,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01BDA6052B17BACC00BCA286 /* BuildingDetail.swift in Sources */,
+				01BDA6072B17BB4000BCA286 /* CustomTabBar.swift in Sources */,
 				01C5C92B2B17A44800FF5CC0 /* ContentView.swift in Sources */,
+				01BDA6012B17B9BF00BCA286 /* BuildingModel.swift in Sources */,
 				01C5C9292B17A44800FF5CC0 /* mapppApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -425,6 +441,7 @@
 				DEVELOPMENT_TEAM = V94L67MHG8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location User";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -454,6 +471,7 @@
 				DEVELOPMENT_TEAM = V94L67MHG8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location User";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

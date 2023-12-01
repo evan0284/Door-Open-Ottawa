@@ -10,9 +10,10 @@ import SwiftUI
 
 struct BuildingDetail: View {
     let building: Building
-    let isFavorite: Bool
-    let toggleFavorite: () -> Void
-    
+//    let isFavorite: Bool
+//    let toggleFavorite: () -> Void
+    @EnvironmentObject var viewModel: BuildingViewModel
+
     @State private var showFullDescription = false
     @Environment(\.presentationMode) var presentationMode
     
@@ -45,10 +46,10 @@ struct BuildingDetail: View {
                                         }
                                         Spacer()
                                         Button(action: {
-                                            toggleFavorite()
+                                            viewModel.toggleFavorite(building: building)
                                         }) {
-                                            Image(systemName: isFavorite ? "star.fill" : "star")
-                                                .foregroundColor(isFavorite ? .white : .white)
+                                            Image(systemName: viewModel.isFavorite(building: building) ? "star.fill" : "star")
+                                                .foregroundColor(viewModel.isFavorite(building: building) ? .white : .white)
                                                 .padding(6)
                                                 .background(Color.white
                                                     .opacity(0.3))
