@@ -15,7 +15,8 @@ struct ContentView: View {
     @State private var buildings: [Building] = []
     @State private var favoriteBuilding: [Building] = []
     
-    @StateObject private var viewModel = BuildingViewModel()
+    @StateObject private var viewModel = LocationModel()
+    @StateObject private var buildingModel = BuildingViewModel()
     
     @State private var selectedTab: Tab = .house
     @State private var searchTerm = ""
@@ -24,8 +25,9 @@ struct ContentView: View {
         ZStack {
             TabView(selection: $selectedTab) {
                 NavigationView {
-                    BuildingsView(buildings: $buildings)
+                    BuildingsView()
                         .environmentObject(viewModel)
+                        .environmentObject(buildingModel)
 
                 }
                 .tag(Tab.house)
@@ -60,17 +62,21 @@ struct ContentView: View {
                 Spacer()
                 MyTabBar(selectedTab: $selectedTab)
             }
+            .shadow(radius: 1)
             .padding(.horizontal, 20)
         }
+        .environmentObject(viewModel)
+        .environmentObject(buildingModel)
         
 
     }
 }
 
 
-class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var favoriteBuilding: [Building] = []
     @Published var buildings: [Building] = []
+    
     private var yourLocation = CLLocationManager()
     var userLocation: CLLocation?
     
@@ -134,21 +140,137 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 }
 
-struct BuildingsView: View {
-    @Binding var buildings: [Building]
-    @EnvironmentObject var viewModel: BuildingViewModel
-    @State private var searchTerm = ""
+class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+    @Published var buildings: [Building] = []
+    @EnvironmentObject var viewModel: LocationModel
+    
+    
+    enum SortOption: String, CaseIterable {
+        case alphabetical = "Alphabetical"
+        case distance = "Distance"
+    }
+    // Sorting
+    @Published var selectedSortOption: SortOption = .alphabetical
+    
+    // Filters
+    @Published var isShuttleFilter = false
+    @Published var isPublicWashroomsFilter = false
 
+    func fetchData() {
+        print("Fetching data...")
+
+        if let url = Bundle.main.url(forResource: "buildings", withExtension: "json") {
+            do {
+                let data = try Data(contentsOf: url)
+                let decoder = JSONDecoder()
+                let result = try decoder.decode([BuildingData].self, from: data)
+                self.buildings = result.flatMap { $0.buildings }
+
+                for building in buildings {
+                    print("Fetched Building: \(building.name)")
+                }
+            } catch {
+                print("Error loading JSON: \(error)")
+            }
+        } else {
+            print("URL for buildings.json is nil")
+        }
+    }
+
+    func sortBuildings() {
+        print("Sorting buildings...")
+
+        buildings = sortedBuildings()
+    }
+
+    // Use the existing fetchData method
+
+    func sortedBuildings() -> [Building] {
+        switch selectedSortOption {
+        case .alphabetical:
+            return buildings.sorted { $0.name < $1.name }
+        case .distance:
+            // Implement sorting by distance based on user's location
+            // You may want to update your BuildingViewModel to handle distance calculation
+            return buildings.sorted { viewModel.calculateDistance(to: $0) < viewModel.calculateDistance(to: $1) }
+
+        }
+    }
+    
+    func filteredBuildings() -> [Building] {
+        buildings.filter { building in
+            let shuttleFilter = !isShuttleFilter || building.isShuttle
+            let publicWashroomsFilter = !isPublicWashroomsFilter || building.isPublicWashrooms
+            // Add similar filters for other features
+
+            return shuttleFilter &&
+                publicWashroomsFilter
+
+        }
+    }
+    
+}
+
+struct BuildingsView: View {
+    
+    @EnvironmentObject var viewModel: LocationModel
+    @EnvironmentObject var buildingModel: BuildingViewModel
+    
+    
+    @State private var searchTerm = ""
+    
+    @State private var showSortSheet = false
+
+    
     var body: some View {
         NavigationStack{
-            ZStack {
-                Color(.gray.opacity(0.1))
-                    .edgesIgnoringSafeArea(.all)
+            VStack {
+//                Color(.gray.opacity(0.1))
+//                    .edgesIgnoringSafeArea(.all)
+            HStack {
+                Image("ic_logo_new")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
+                    .overlay(Rectangle().fill(Color.blue))
+                    .mask(Image("ic_logo_new").resizable())
+                    .frame(width: 45, height: 6)
+                    .padding([.top, .leading], 4)
 
+                Spacer()
+                Button(action: {
+                    showSortSheet.toggle()
+                }) {
+                    Image(systemName: "slider.horizontal.3")
+                        .padding(8)
+                }
+                .background(Color.white)
+                .cornerRadius(8)
+                .padding(.trailing, 16)
+                .sheet(isPresented: $showSortSheet) {
+                    SortSheetView( onClose: {
+                        // Perform sorting based on selectedSortOption
+                        print("Sheet closed")
+                                showSortSheet = false
+                                buildingModel.sortBuildings()
+                    })
+                }
+            }
+            .padding(.horizontal, 24)
+            
+            TextField("Search", text: $searchTerm)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.white)
+                .cornerRadius(8)
+                .padding(.horizontal, 24)
+            
+        
+                
                 ScrollView{
                     VStack(spacing: 16) {
                     
-                        ForEach(buildings.filter { building in
+                        ForEach(buildingModel.buildings.filter { building in
                             searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
                         }) { building in
                         NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
@@ -162,36 +284,62 @@ struct BuildingsView: View {
                 }
 
                 .onAppear {
-                    fetchData()
+                    buildingModel.fetchData()
+                    
                 }
             }
+            .background( Color(.gray.opacity(0.1))
+                .edgesIgnoringSafeArea(.all))
         }
-        .searchable(text: $searchTerm)
+//        .navigationBarHidden(true)
+//        .searchable(text: $searchTerm)
+        
     }
-    
-    func fetchData() {
-        if let url = Bundle.main.url(forResource: "buildings", withExtension: "json") {
-            do {
-                let data = try Data(contentsOf: url)
-                let decoder = JSONDecoder()
-                let result = try decoder.decode([BuildingData].self, from: data)
-                self.buildings = result.flatMap { $0.buildings }
 
-                for building in buildings {
-                    print("Fetched Building: \(building.name)")
+    
+}
+
+
+struct SortSheetView: View {
+//    @Binding var selectedOption: BuildingViewModel.SortOption
+    var onClose: () -> Void
+//    var buildingModel: BuildingViewModel  // Add this property
+    @EnvironmentObject var buildingModel: BuildingViewModel
+
+    
+    var body: some View {
+        VStack {
+            Text("Sort By")
+                .font(.headline)
+                .padding()
+
+            ForEach(BuildingViewModel.SortOption.allCases, id: \.self) { option in
+                Button(action: {
+                    buildingModel.selectedSortOption = option
+                    onClose()
+                }) {
+                    Text(option.rawValue)
+                        .foregroundColor(buildingModel.selectedSortOption == option ? .blue : .black)
+                        .padding()
                 }
-            } catch {
-                
-                print("Error loading JSON: \(error)")
             }
+
+            Spacer()
+
+            Button("Close") {
+                onClose()
+            }
+            .font(.headline)
+            .padding()
         }
+        .padding()
     }
 }
 
 
 struct CardView: View {
     let building: Building
-    @EnvironmentObject var viewModel:BuildingViewModel
+    @EnvironmentObject var viewModel:LocationModel
 
     var body: some View {
         
@@ -321,7 +469,7 @@ struct CardView: View {
 
 struct MapView: View {
     @Binding var buildings: [Building]
-    @EnvironmentObject var viewModel:BuildingViewModel
+    @EnvironmentObject var viewModel:LocationModel
 
 
     @State private var selectedBuilding: Building? = nil
@@ -442,42 +590,85 @@ struct MapView: View {
 }
 
 struct FavoritesView: View {
-    @EnvironmentObject var viewModel: BuildingViewModel
+    @EnvironmentObject var viewModel: LocationModel
     @State private var searchTerm = ""
 
 
     var body: some View {
         NavigationStack{
-            if viewModel.favoriteBuilding.isEmpty {
-                VStack {
-                    Text("You haven't added any favorite building yet")
-                        .foregroundColor(.gray)
+            VStack {
+                //                Color(.gray.opacity(0.1))
+                //                    .edgesIgnoringSafeArea(.all)
+                HStack {
+                    Image("ic_logo_new")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
+                        .overlay(Rectangle().fill(Color.blue))
+                        .mask(Image("ic_logo_new").resizable())
+                        .frame(width: 45, height: 6)
+                        .padding([.top, .leading], 4)
                     
                     Spacer()
+//                    Button(action: {
+//                        //                isFiltering.toggle()
+//                    }) {
+//                        Image(systemName: "slider.horizontal.3") // Add your filter icon here
+//                        //                    .foregroundColor(isFiltering ? .blue : .black)
+//                            .padding(8)
+//                    }
+//                    .background(Color.white)
+//                    .cornerRadius(8)
+//                    //                .padding(.trailing, 16)
                 }
-                .navigationTitle("Favorites")
-            } else {
-                ZStack {
-                    Color(.gray.opacity(0.1))
-                        .edgesIgnoringSafeArea(.all)
+                .padding(.vertical, 11)
+
+                .padding(.horizontal, 24)
+                
+                TextField("Search", text: $searchTerm)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.white)
+                    .cornerRadius(8)
+                    .padding(.horizontal, 24)
+                
+                
+                if viewModel.favoriteBuilding.isEmpty {
                     VStack {
-                        ForEach(viewModel.favoriteBuilding.filter { building in
-                            searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
-                        }) { building in
-                            NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
-                                CardView(building: building)
-                                    .listRowSeparator(.hidden)
-                            }
-                        }
+//                        Color(.gray.opacity(0.1))
+//                            .edgesIgnoringSafeArea(.all)
+                        Text("You haven't added any favorite building yet")
+                            .foregroundColor(.gray)
+                            .padding(24)
+                        
                         Spacer()
                     }
-                    .padding(24)
-
+                    //                .navigationTitle("Favorites")
+                } else {
+                    ZStack {
+                        Color(.gray.opacity(0.1))
+                            .edgesIgnoringSafeArea(.all)
+                        VStack {
+                            ForEach(viewModel.favoriteBuilding.filter { building in
+                                searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
+                            }) { building in
+                                NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
+                                    CardView(building: building)
+                                        .listRowSeparator(.hidden)
+                                }
+                            }
+                            Spacer()
+                        }
+                        .padding(24)
+                        
+                    }
                 }
             }
+            .background( Color(.gray.opacity(0.1))
+                .edgesIgnoringSafeArea(.all))
+//            .searchable(text: $searchTerm)
+            
         }
-        .searchable(text: $searchTerm)
-        
     }
 }
 

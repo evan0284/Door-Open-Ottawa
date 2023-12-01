@@ -102,6 +102,7 @@
 		01C5C9272B17A44800FF5CC0 /* mappp */ = {
 			isa = PBXGroup;
 			children = (
+				01BDA6002B17B9BF00BCA286 /* BuildingModel.swift */,
 				01C5C9282B17A44800FF5CC0 /* mapppApp.swift */,
 				01BDA6042B17BACC00BCA286 /* BuildingDetail.swift */,
 				01BDA6062B17BB4000BCA286 /* CustomTabBar.swift */,
@@ -124,7 +125,6 @@
 		01C5C9382B17A44A00FF5CC0 /* mapppTests */ = {
 			isa = PBXGroup;
 			children = (
-				01BDA6002B17B9BF00BCA286 /* BuildingModel.swift */,
 				01C5C9392B17A44A00FF5CC0 /* mapppTests.swift */,
 			);
 			path = mapppTests;

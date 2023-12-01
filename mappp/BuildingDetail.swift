@@ -11,7 +11,7 @@ import SwiftUI
 struct BuildingDetail: View {
     let building: Building
 
-    @EnvironmentObject var viewModel: BuildingViewModel
+    @EnvironmentObject var viewModel: LocationModel
 
     @State private var showFullDescription = false
     @Environment(\.presentationMode) var presentationMode
@@ -461,42 +461,42 @@ struct BuildingDetail: View {
     }
 }
 
-struct BuildingDetail_Previews: PreviewProvider {
-    // Remove @State since it's not needed in a PreviewProvider
-
-    static var previews: some View {
-        let sampleBuilding = Building(
-            buildingId: 1,
-            name: "Sample Buildingkjsdfoipweorfijwijpo",
-            isNew: true,
-            address: "123 Main St.",
-            description: "The AIDS Committee of Ottawa (ACO) has served the HIV/AIDS community for 30 years, providing education and support services around HIV/AIDS. Built in 1961 and overlooking the Rideau Canal, the home of the ACO features a drop-in centre known as the Living Room - a place of comfort and care that pays tribute to the origins of the HIV/AIDS movement in Canada in the early 80s.",
-            website: "http://example.com",
-            categoryId: 1,
-            category: "Community and/or Care centres",
-            saturdayStart: "2023-01-01 09:00",
-            saturdayClose: "2023-01-01 17:00",
-            sundayStart: "2023-01-02 09:00",
-            sundayClose: "2023-01-02 17:00",
-            isShuttle: true,
-            isPublicWashrooms: true,
-            isAccessible: true,
-            isFreeParking: true,
-            isBikeParking: true,
-            isPaidParking: true,
-            isGuidedTour: true,
-            isFamilyFriendly: true,
-            image: "aids_ottawa",
-            isOCTranspoNearby: true,
-            imageDescription: "Sample image description",
-            latitude: 0.0,
-            longitude: 0.0,
-            isOpenSaturday: true,
-            isOpenSunday: false
-        )
-        
-
-        // Use the sample building for preview
-        return BuildingDetail(building: sampleBuilding)
-    }
-}
+//struct BuildingDetail_Previews: PreviewProvider {
+//    // Remove @State since it's not needed in a PreviewProvider
+//
+//    static var previews: some View {
+//        let sampleBuilding = Building(
+//            buildingId: 1,
+//            name: "Sample Buildingkjsdfoipweorfijwijpo",
+//            isNew: true,
+//            address: "123 Main St.",
+//            description: "The AIDS Committee of Ottawa (ACO) has served the HIV/AIDS community for 30 years, providing education and support services around HIV/AIDS. Built in 1961 and overlooking the Rideau Canal, the home of the ACO features a drop-in centre known as the Living Room - a place of comfort and care that pays tribute to the origins of the HIV/AIDS movement in Canada in the early 80s.",
+//            website: "http://example.com",
+//            categoryId: 1,
+//            category: "Community and/or Care centres",
+//            saturdayStart: "2023-01-01 09:00",
+//            saturdayClose: "2023-01-01 17:00",
+//            sundayStart: "2023-01-02 09:00",
+//            sundayClose: "2023-01-02 17:00",
+//            isShuttle: true,
+//            isPublicWashrooms: true,
+//            isAccessible: true,
+//            isFreeParking: true,
+//            isBikeParking: true,
+//            isPaidParking: true,
+//            isGuidedTour: true,
+//            isFamilyFriendly: true,
+//            image: "aids_ottawa",
+//            isOCTranspoNearby: true,
+//            imageDescription: "Sample image description",
+//            latitude: 0.0,
+//            longitude: 0.0,
+//            isOpenSaturday: true,
+//            isOpenSunday: false
+//        )
+//        
+//
+//        // Use the sample building for preview
+//        return BuildingDetail(building: sampleBuilding)
+//    }
+//}
