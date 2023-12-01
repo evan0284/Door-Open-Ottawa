@@ -21,39 +21,48 @@ struct ContentView: View {
     @State private var searchTerm = ""
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationView {
-                BuildingsView(buildings: $buildings)
-                    .environmentObject(viewModel)
+        ZStack {
+            TabView(selection: $selectedTab) {
+                NavigationView {
+                    BuildingsView(buildings: $buildings)
+                        .environmentObject(viewModel)
+
+                }
+                .tag(Tab.house)
+
+//                .tabItem {
+//                    Image(systemName: "house")
+//                    Text("Buildings")
+//                }
+       
+                NavigationView {
+                    MapView(buildings: $buildings)
+                        .environmentObject(viewModel)
+                }
+//                .tabItem {
+//                    Image(systemName: "map")
+//                    Text("Map")
+//                }
+                .tag(Tab.map)
+                
+                NavigationView {
+                    FavoritesView()
+                        .environmentObject(viewModel)
+                }
+//                .tabItem {
+//                    Image(systemName: "star")
+//                    Text("Favorites")
+//                }
+                .tag(Tab.star)
 
             }
-            .tabItem {
-                Image(systemName: "house")
-                Text("Buildings")
+            VStack {
+                Spacer()
+                MyTabBar(selectedTab: $selectedTab)
             }
-            .tag(Tab.house)
-
-            
-            NavigationView {
-                MapView(buildings: $buildings)
-                    .environmentObject(viewModel)
-            }
-            .tabItem {
-                Image(systemName: "map")
-                Text("Map")
-            }
-            .tag(Tab.map)
-            
-            NavigationView {
-                FavoritesView()
-                    .environmentObject(viewModel)
-            }
-            .tabItem {
-                Image(systemName: "star")
-                Text("Favorites")
-            }
-            .tag(Tab.star)
+            .padding(.horizontal, 20)
         }
+        
 
     }
 }
@@ -69,7 +78,7 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         setupLocationManager()
-//        UITabBar.appearance().isHidden = true
+        UITabBar.appearance().isHidden = true
 
     }
 
@@ -139,7 +148,6 @@ struct BuildingsView: View {
                 ScrollView{
                     VStack(spacing: 16) {
                     
-//                    ForEach(buildings) { building in
                         ForEach(buildings.filter { building in
                             searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
                         }) { building in
@@ -153,9 +161,6 @@ struct BuildingsView: View {
                     .padding(24)
                 }
 
-//                .navigationTitle("Buildings")
-//                .listStyle(.plain)
-//                .navigationBarHidden(true)
                 .onAppear {
                     fetchData()
                 }
@@ -201,6 +206,27 @@ struct CardView: View {
                 .overlay(
                     VStack(alignment:.leading) {
                         HStack{
+                            if building.isNew{
+                                VStack {
+                                    Image("newBuilding")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .scaledToFill()
+                                        .overlay(Rectangle().fill(Color.white))
+                                        .mask(Image("newBuilding").resizable())
+                                        .frame(width: 20, height: 6)
+                                    
+                                }
+                                .padding(12)
+                                .cornerRadius(10)
+                                .background(Color.white
+                                    .opacity(0.3))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .stroke(.white, lineWidth: 1)
+                                )
+
+                            }
                             Spacer()
                             Button(action: {
                                 viewModel.toggleFavorite(building: building)
@@ -417,6 +443,8 @@ struct MapView: View {
 
 struct FavoritesView: View {
     @EnvironmentObject var viewModel: BuildingViewModel
+    @State private var searchTerm = ""
+
 
     var body: some View {
         NavigationStack{
@@ -433,7 +461,9 @@ struct FavoritesView: View {
                     Color(.gray.opacity(0.1))
                         .edgesIgnoringSafeArea(.all)
                     VStack {
-                        ForEach(viewModel.favoriteBuilding) { building in
+                        ForEach(viewModel.favoriteBuilding.filter { building in
+                            searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
+                        }) { building in
                             NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
                                 CardView(building: building)
                                     .listRowSeparator(.hidden)
@@ -442,12 +472,11 @@ struct FavoritesView: View {
                         Spacer()
                     }
                     .padding(24)
-                    .navigationTitle("Buildings")
-                    .listStyle(.plain)
-                    .navigationBarHidden(true)
+
                 }
             }
         }
+        .searchable(text: $searchTerm)
         
     }
 }

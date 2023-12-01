@@ -10,8 +10,7 @@ import SwiftUI
 
 struct BuildingDetail: View {
     let building: Building
-//    let isFavorite: Bool
-//    let toggleFavorite: () -> Void
+
     @EnvironmentObject var viewModel: BuildingViewModel
 
     @State private var showFullDescription = false
@@ -78,27 +77,55 @@ struct BuildingDetail: View {
                                     .padding(24)
                                     
                                     Spacer()
-                                    VStack(alignment:.leading) {
-                                        Text(building.name)
-                                            .font(.title2)
-                                            .fontWeight(.heavy)
-                                            .foregroundStyle(Color.white)
-                                        HStack {
-                                            iconForCategory(building.categoryId)
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .scaledToFill()
-                                                .overlay(Rectangle().fill(Color.white))
-                                                .mask(iconForCategory(building.categoryId).resizable())
-                                                .frame(width: 15, height: 10)
-                                            
-                                            Text(building.category)
-                                                .foregroundColor(.white)
-                                                .font(.footnote)
+                                    HStack(alignment: .bottom) {
+                                        VStack(alignment:.leading) {
+                                            Text(building.name)
+                                                .font(.title2)
+                                                .fontWeight(.heavy)
+                                                .foregroundStyle(Color.white)
+                                            HStack {
+                                                iconForCategory(building.categoryId)
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .scaledToFill()
+                                                    .overlay(Rectangle().fill(Color.white))
+                                                    .mask(iconForCategory(building.categoryId).resizable())
+                                                    .frame(width: 15, height: 10)
+                                                
+                                                Text(building.category)
+                                                    .foregroundColor(.white)
+                                                    .font(.footnote)
+                                            }
                                         }
-                                        
+                                        .padding(24)
+                                        Spacer()
+                                        if building.isNew{
+                                            VStack {
+                                                Image("newBuilding")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .scaledToFill()
+                                                    .overlay(Rectangle().fill(Color.white))
+                                                    .mask(Image("newBuilding").resizable())
+                                                    .frame(width: 20, height: 6)
+                                                    .padding(.top, 8)
+                                                    .padding(.bottom, 3)
+
+                                                
+                                                
+                                                Text("Building")
+                                                    .font(/*@START_MENU_TOKEN@*/.footnote/*@END_MENU_TOKEN@*/)
+                                                    .foregroundColor(.white)
+                                            }
+                                            .padding(12)
+                                            .cornerRadius(10)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .stroke(.white, lineWidth: 1)
+                                            )
+                                            .padding([.bottom, .trailing], 24)
+                                        }
                                     }
-                                    .padding(24)
                                     
                                 }
                                     .background(
@@ -434,43 +461,42 @@ struct BuildingDetail: View {
     }
 }
 
-//struct BuildingDetail_Previews: PreviewProvider {
-//    // Remove @State since it's not needed in a PreviewProvider
-//    private var favoriteBuilding: [Building] = []
-//
-//    static var previews: some View {
-//        let sampleBuilding = Building(
-//            buildingId: 1,
-//            name: "Sample Building",
-//            isNew: true,
-//            address: "123 Main St.",
-//            description: "The AIDS Committee of Ottawa (ACO) has served the HIV/AIDS community for 30 years, providing education and support services around HIV/AIDS. Built in 1961 and overlooking the Rideau Canal, the home of the ACO features a drop-in centre known as the Living Room - a place of comfort and care that pays tribute to the origins of the HIV/AIDS movement in Canada in the early 80s.",
-//            website: "http://example.com",
-//            categoryId: 1,
-//            category: "Community and/or Care centres",
-//            saturdayStart: "2023-01-01 09:00",
-//            saturdayClose: "2023-01-01 17:00",
-//            sundayStart: "2023-01-02 09:00",
-//            sundayClose: "2023-01-02 17:00",
-//            isShuttle: true,
-//            isPublicWashrooms: true,
-//            isAccessible: true,
-//            isFreeParking: true,
-//            isBikeParking: true,
-//            isPaidParking: true,
-//            isGuidedTour: true,
-//            isFamilyFriendly: true,
-//            image: "aids_ottawa",
-//            isOCTranspoNearby: true,
-//            imageDescription: "Sample image description",
-//            latitude: 0.0,
-//            longitude: 0.0,
-//            isOpenSaturday: true,
-//            isOpenSunday: false
-//        )
-//        
-//
-//        // Use the sample building for preview
-//        return BuildingDetail(building: sampleBuilding, isFavorite: isFavorite(building: sampleBuilding), toggleFavorite: { toggleFavorite(building: sampleBuilding) })
-//    }
-//}
+struct BuildingDetail_Previews: PreviewProvider {
+    // Remove @State since it's not needed in a PreviewProvider
+
+    static var previews: some View {
+        let sampleBuilding = Building(
+            buildingId: 1,
+            name: "Sample Buildingkjsdfoipweorfijwijpo",
+            isNew: true,
+            address: "123 Main St.",
+            description: "The AIDS Committee of Ottawa (ACO) has served the HIV/AIDS community for 30 years, providing education and support services around HIV/AIDS. Built in 1961 and overlooking the Rideau Canal, the home of the ACO features a drop-in centre known as the Living Room - a place of comfort and care that pays tribute to the origins of the HIV/AIDS movement in Canada in the early 80s.",
+            website: "http://example.com",
+            categoryId: 1,
+            category: "Community and/or Care centres",
+            saturdayStart: "2023-01-01 09:00",
+            saturdayClose: "2023-01-01 17:00",
+            sundayStart: "2023-01-02 09:00",
+            sundayClose: "2023-01-02 17:00",
+            isShuttle: true,
+            isPublicWashrooms: true,
+            isAccessible: true,
+            isFreeParking: true,
+            isBikeParking: true,
+            isPaidParking: true,
+            isGuidedTour: true,
+            isFamilyFriendly: true,
+            image: "aids_ottawa",
+            isOCTranspoNearby: true,
+            imageDescription: "Sample image description",
+            latitude: 0.0,
+            longitude: 0.0,
+            isOpenSaturday: true,
+            isOpenSunday: false
+        )
+        
+
+        // Use the sample building for preview
+        return BuildingDetail(building: sampleBuilding)
+    }
+}
