@@ -25,8 +25,8 @@ struct ContentView: View {
             NavigationView {
                 BuildingsView(buildings: $buildings)
                     .environmentObject(viewModel)
+
             }
-            .searchable(text: $searchTerm)
             .tabItem {
                 Image(systemName: "house")
                 Text("Buildings")
@@ -45,7 +45,7 @@ struct ContentView: View {
             .tag(Tab.map)
             
             NavigationView {
-                FavoritesView(favoriteBuilding: $viewModel.favoriteBuilding, viewModel: viewModel)
+                FavoritesView()
                     .environmentObject(viewModel)
             }
             .tabItem {
@@ -54,6 +54,7 @@ struct ContentView: View {
             }
             .tag(Tab.star)
         }
+
     }
 }
 
@@ -79,6 +80,7 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         yourLocation.startUpdatingLocation()
     }
 
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.last {
             userLocation = location
@@ -136,31 +138,32 @@ struct BuildingsView: View {
 
                 ScrollView{
                     VStack(spacing: 16) {
-
-                        ForEach(buildings) { building in
-                            NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
-                                CardView(building: building)
-                                    .listRowSeparator(.hidden)
-                            }
+                    
+//                    ForEach(buildings) { building in
+                        ForEach(buildings.filter { building in
+                            searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
+                        }) { building in
+                        NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
+                            CardView(building: building)
+                                .listRowSeparator(.hidden)
                         }
+                    }
+                
                     }
                     .padding(24)
                 }
 
-                .navigationTitle("Buildings")
-                .listStyle(.plain)
-                .navigationBarHidden(true)
+//                .navigationTitle("Buildings")
+//                .listStyle(.plain)
+//                .navigationBarHidden(true)
                 .onAppear {
                     fetchData()
                 }
             }
-
         }
         .searchable(text: $searchTerm)
-
-        
-
     }
+    
     func fetchData() {
         if let url = Bundle.main.url(forResource: "buildings", withExtension: "json") {
             do {
@@ -413,16 +416,15 @@ struct MapView: View {
 }
 
 struct FavoritesView: View {
-    @Binding var favoriteBuilding: [Building]
-    var viewModel: BuildingViewModel
+    @EnvironmentObject var viewModel: BuildingViewModel
 
     var body: some View {
-        NavigationView {
-            if favoriteBuilding.isEmpty {
+        NavigationStack{
+            if viewModel.favoriteBuilding.isEmpty {
                 VStack {
                     Text("You haven't added any favorite building yet")
                         .foregroundColor(.gray)
-
+                    
                     Spacer()
                 }
                 .navigationTitle("Favorites")
@@ -431,7 +433,7 @@ struct FavoritesView: View {
                     Color(.gray.opacity(0.1))
                         .edgesIgnoringSafeArea(.all)
                     VStack {
-                        ForEach(favoriteBuilding) { building in
+                        ForEach(viewModel.favoriteBuilding) { building in
                             NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
                                 CardView(building: building)
                                     .listRowSeparator(.hidden)
@@ -446,8 +448,10 @@ struct FavoritesView: View {
                 }
             }
         }
+        
     }
 }
+
 #Preview {
     ContentView()
 }
