@@ -387,59 +387,70 @@ struct SortSheetView: View {
     var body: some View {
         ScrollView {
             VStack {
-                
-                Picker("Category", selection: $buildingModel.selectedCategoryFilter) {
-                                    Text("All Categories").tag(nil as Int?)
-                                    ForEach([7, 0, 8, 9, 6, 4, 10, 3, 5, 2, 1], id: \.self) { categoryId in
-                                        Text(buildingModel.categoryName(for: categoryId)).tag(categoryId as Int?)
-                                    }
-                                }
-                .pickerStyle(MenuPickerStyle())
-                                .padding()
-                Divider()
-
-                
-                Text("Sort By")
-                    .font(.headline)
-                    .padding()
-
-                ForEach(BuildingViewModel.SortOption.allCases, id: \.self) { option in
-                    Button(action: {
-                        buildingModel.selectedSortOption = option
-                        onClose()
-                    }) {
-                        Text(option.rawValue)
-                            .foregroundColor(buildingModel.selectedSortOption == option ? .blue : .black)
-                    }
-                }
-                
-                Divider()
-
                 HStack() {
-                    Text("Filter by Building Features")
+                    Text("Category")
                         .font(.headline)
-                    .padding(.top)
+
+                    Spacer()
+                    Picker("Category", selection: $buildingModel.selectedCategoryFilter) {
+                        Text("All Categories").tag(nil as Int?)
+                        ForEach([0,1,2,3,4,5,6,7,8,9,10], id: \.self) { categoryId in
+                            Text(buildingModel.categoryName(for: categoryId)).tag(categoryId as Int?)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                }
+                .padding()
+
+                Divider()
+
+                
+                HStack {
+                    Text("Sort By")
+                        .font(.headline)
                     Spacer()
 
+                    Picker("Sort By", selection: $buildingModel.selectedSortOption) {
+                        ForEach(BuildingViewModel.SortOption.allCases, id: \.self) { option in
+                            Text(option.rawValue)
+                                .tag(option)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
                 }
+                .padding()
+                
+                Divider()
 
-                Toggle("Shuttle", isOn: $buildingModel.isShuttleFilter)
 
-                Toggle("Public Washrooms", isOn: $buildingModel.isPublicWashroomsFilter)
 
-                Toggle("Accessible", isOn: $buildingModel.isAccessibleFilter)
+                VStack {
+                    HStack() {
+                        Text("Building Features")
+                            .font(.headline)
+                        Spacer()
 
-                Toggle("Free Parking", isOn: $buildingModel.isFreeParkingFilter)
+                    }
+                    Toggle("Shuttle", isOn: $buildingModel.isShuttleFilter)
+                    Toggle("Public Washrooms", isOn: $buildingModel.isPublicWashroomsFilter)
 
-                Toggle("Bike Parking", isOn: $buildingModel.isBikeParkingFilter)
+                    Toggle("Accessible", isOn: $buildingModel.isAccessibleFilter)
 
-                Toggle("Paid Parking", isOn: $buildingModel.isPaidParkingFilter)
-       
-                Toggle("Guided Tour", isOn: $buildingModel.isGuidedTourFilter)
+                    Toggle("Free Parking", isOn: $buildingModel.isFreeParkingFilter)
 
-                Toggle("Family Friendly", isOn: $buildingModel.isFamilyFriendlyFilter)
+                    Toggle("Bike Parking", isOn: $buildingModel.isBikeParkingFilter)
 
-                Toggle("New", isOn: $buildingModel.isNewFilter)
+                    Toggle("Paid Parking", isOn: $buildingModel.isPaidParkingFilter)
+           
+                    Toggle("Guided Tour", isOn: $buildingModel.isGuidedTourFilter)
+
+                    Toggle("Family Friendly", isOn: $buildingModel.isFamilyFriendlyFilter)
+
+                    Toggle("New", isOn: $buildingModel.isNewFilter)
+                }
+                .padding()
+
+
 
 
                 HStack {
@@ -448,19 +459,20 @@ struct SortSheetView: View {
                         buildingModel.resetFilters()
                     }
                     .font(.headline)
-                    .padding()
 
                     Spacer()
 
                     Button("Confirm") {
                         onClose()
                     }
+                    .foregroundColor(.white)
+                    .padding(12)
                     .font(.headline)
-                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(12)
                 }
-                
-                Divider()
-                
+                .padding()
+                                
             }
             .padding()
         }
