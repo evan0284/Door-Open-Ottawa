@@ -9,17 +9,24 @@ import SwiftUI
 import MapKit
 import Combine
 import CoreLocation
+import Firebase
+
 
 
 struct ContentView: View {
     @State private var buildings: [Building] = []
     @State private var favoriteBuilding: [Building] = []
     
-    @StateObject private var viewModel = LocationModel()
-    @StateObject private var buildingModel = BuildingViewModel()
+    @StateObject var viewModel = LocationModel()
+    @StateObject var buildingModel = BuildingViewModel()
+    @StateObject var networkMonitor = NetworkMonitor()
 
-    @State private var selectedTab: Tab = .house
+
+    @State private var selectedTab: Tab = .gearshape
     @State private var searchTerm = ""
+    
+    @State private var showAboutMe: Bool = false
+
     
     var body: some View {
         ZStack {
@@ -41,21 +48,23 @@ struct ContentView: View {
                     MapView(buildings: $buildings)
                         .environmentObject(viewModel)
                 }
-//                .tabItem {
-//                    Image(systemName: "map")
-//                    Text("Map")
-//                }
                 .tag(Tab.map)
                 
                 NavigationView {
                     FavoritesView()
                         .environmentObject(viewModel)
                 }
-//                .tabItem {
-//                    Image(systemName: "star")
-//                    Text("Favorites")
-//                }
                 .tag(Tab.star)
+                
+                NavigationView {
+                    MoreView()
+                        .environmentObject(buildingModel)
+                        .environmentObject(networkMonitor)
+
+
+
+                }
+                .tag(Tab.gearshape)
 
             }
             VStack {
@@ -65,21 +74,18 @@ struct ContentView: View {
             .shadow(radius: 1)
             .padding(.horizontal, 20)
         }
-        .environmentObject(viewModel)
-        .environmentObject(buildingModel)
-        
 
     }
 }
-
 
 class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var favoriteBuilding: [Building] = []
     @Published var buildings: [Building] = []
     @EnvironmentObject var buildingModel: BuildingViewModel
-
-    private var yourLocation = CLLocationManager()
-    var userLocation: CLLocation?
+    
+    @Published var yourLocation = CLLocationManager()
+    @Published var userLocation: CLLocation?
+    
     
 
     override init() {
@@ -101,6 +107,7 @@ class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         if let location = locations.last {
             userLocation = location
             objectWillChange.send()
+            
         }
     }
 
@@ -139,14 +146,13 @@ class LocationModel: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         return distanceString
     }
-    
-    
 }
 
 class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+    
     @Published var buildings: [Building] = []
     @EnvironmentObject var viewModel: LocationModel
-//    var userLocation: CLLocation?
+    
 
     @Published var isShuttleFilter = false
     @Published var isPublicWashroomsFilter = false
@@ -161,16 +167,16 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var selectedCategoryFilter: Int? = nil
 
     
-    
     enum SortOption: String, CaseIterable {
         case alphabetical = "Alphabetical"
         case distance = "Distance"
     }
-    
 
-    // Sorting
+
     @Published var selectedSortOption: SortOption = .alphabetical
     
+    @Published var selectedLanguage: String = "en"
+
    
     func fetchData() {
         print("Fetching data...")
@@ -180,7 +186,10 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
                 let data = try Data(contentsOf: url)
                 let decoder = JSONDecoder()
                 let result = try decoder.decode([BuildingData].self, from: data)
-                self.buildings = result.flatMap { $0.buildings }
+
+                let filteredBuildings = result.first(where: { $0.language == selectedLanguage })?.buildings ?? []
+
+                self.buildings = filteredBuildings
 
                 for building in buildings {
                     print("Fetched Building: \(building.name)")
@@ -192,13 +201,18 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             print("URL for buildings.json is nil")
         }
     }
+    
+    func toggleLanguage() {
+        if selectedLanguage == "en" {
+            selectedLanguage = "fr"
+        } else {
+            selectedLanguage = "en"
+        }
 
-    func sortBuildings() {
-        print("Sorting buildings...")
-
-        buildings = sortedBuildings()
+        fetchData()
     }
 
+    
     func categoryName(for categoryId: Int) -> String {
         switch categoryId {
         case 0:
@@ -227,8 +241,13 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             return "Unknown Category"
         }
     }
-    
-    // Use the existing fetchData method
+
+    func sortBuildings() {
+        print("Sorting buildings...")
+
+        buildings = sortedBuildings()
+
+    }
 
     func sortedBuildings() -> [Building] {
         switch selectedSortOption {
@@ -237,6 +256,7 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .distance:
             return buildings.sorted { $0.name < $1.name }
 
+            
         }
     }
     
@@ -281,10 +301,9 @@ class BuildingViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
         isGuidedTourFilter = false
         isFamilyFriendlyFilter = false
         isNewFilter = false
+        selectedCategoryFilter = nil
 
-        // Add any other filter properties if needed
-
-        sortBuildings() // Apply sorting after resetting filters
+        sortBuildings()
     }
     
 }
@@ -303,8 +322,7 @@ struct BuildingsView: View {
     var body: some View {
         NavigationStack{
             VStack {
-//                Color(.gray.opacity(0.1))
-//                    .edgesIgnoringSafeArea(.all)
+
             HStack {
                 Image("ic_logo_new")
                     .resizable()
@@ -326,7 +344,6 @@ struct BuildingsView: View {
                 .cornerRadius(8)
                 .sheet(isPresented: $showSortSheet) {
                     SortSheetView( onClose: {
-                        // Perform sorting based on selectedSortOption
                         print("Sheet closed")
                                 showSortSheet = false
                                 buildingModel.sortBuildings()
@@ -350,7 +367,10 @@ struct BuildingsView: View {
                         ForEach(buildingModel.filteredBuildings().filter { building in
                             searchTerm.isEmpty || building.name.localizedCaseInsensitiveContains(searchTerm)
                         }) { building in
-                        NavigationLink(destination: BuildingDetail(building: building).navigationBarBackButtonHidden(true)) {
+                        NavigationLink(destination: BuildingDetail(building: building)
+                            .navigationBarBackButtonHidden(true)
+                        )
+                            {
                             CardView(building: building)
                                 .listRowSeparator(.hidden)
                         }
@@ -366,10 +386,9 @@ struct BuildingsView: View {
                 }
             }
             .background( Color(.gray.opacity(0.1))
-                .edgesIgnoringSafeArea(.all))
+            .edgesIgnoringSafeArea(.all))
         }
-//        .navigationBarHidden(true)
-//        .searchable(text: $searchTerm)
+
         
     }
 
@@ -455,7 +474,6 @@ struct SortSheetView: View {
 
                 HStack {
                     Button("Reset") {
-                        // Reset all filters to their default state
                         buildingModel.resetFilters()
                     }
                     .font(.headline)
@@ -463,6 +481,7 @@ struct SortSheetView: View {
                     Spacer()
 
                     Button("Confirm") {
+                        buildingModel.sortBuildings()
                         onClose()
                     }
                     .foregroundColor(.white)
@@ -479,7 +498,6 @@ struct SortSheetView: View {
     }
     
 }
-
 
 struct CardView: View {
     let building: Building
@@ -607,9 +625,7 @@ struct CardView: View {
         .cornerRadius(24)
     }
 
-   
 }
-
 
 struct MapView: View {
     @Binding var buildings: [Building]
@@ -741,8 +757,6 @@ struct FavoritesView: View {
     var body: some View {
         NavigationStack{
             VStack {
-                //                Color(.gray.opacity(0.1))
-                //                    .edgesIgnoringSafeArea(.all)
                 HStack {
                     Image("ic_logo_new")
                         .resizable()
@@ -754,16 +768,6 @@ struct FavoritesView: View {
                         .padding([.top, .leading], 4)
                     
                     Spacer()
-//                    Button(action: {
-//                        //                isFiltering.toggle()
-//                    }) {
-//                        Image(systemName: "slider.horizontal.3") // Add your filter icon here
-//                        //                    .foregroundColor(isFiltering ? .blue : .black)
-//                            .padding(8)
-//                    }
-//                    .background(Color.white)
-//                    .cornerRadius(8)
-//                    //                .padding(.trailing, 16)
                 }
                 .padding(.vertical, 11)
 
@@ -779,15 +783,12 @@ struct FavoritesView: View {
                 
                 if viewModel.favoriteBuilding.isEmpty {
                     VStack {
-//                        Color(.gray.opacity(0.1))
-//                            .edgesIgnoringSafeArea(.all)
                         Text("You haven't added any favorite building yet")
                             .foregroundColor(.gray)
                             .padding(24)
                         
                         Spacer()
                     }
-                    //                .navigationTitle("Favorites")
                 } else {
                     ZStack {
                         Color(.gray.opacity(0.1))
@@ -809,10 +810,158 @@ struct FavoritesView: View {
                 }
             }
             .background( Color(.gray.opacity(0.1))
-                .edgesIgnoringSafeArea(.all))
-//            .searchable(text: $searchTerm)
+            .edgesIgnoringSafeArea(.all))
             
         }
+    }
+}
+
+
+
+struct MoreView: View {
+    @EnvironmentObject var buildingViewModel: BuildingViewModel
+    @EnvironmentObject var networkMonitor: NetworkMonitor
+    
+    @State private var isLanguageToggleOn = false
+
+    var body: some View {
+        NavigationStack{
+            VStack(alignment: .leading, spacing: 0){
+                HStack {
+                    
+                    Text("More")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color.blue)
+                }
+                .padding([.top, .leading], 24.0)
+                
+                List{
+
+                    Toggle("Current Language: \(buildingViewModel.selectedLanguage)", isOn: $isLanguageToggleOn)
+                        .toggleStyle(SwitchToggleStyle(tint: Color.blue))
+                        .onChange(of: isLanguageToggleOn) {
+                            buildingViewModel.toggleLanguage()
+                        }
+
+                    NavigationLink("Recommended Building",destination: RecomendedBuilding()
+                        .environmentObject(NetworkMonitor())
+                        .navigationBarBackButtonHidden(true)
+                    )
+                    .foregroundColor(.black)
+                    
+                    NavigationLink("About Me",destination: AboutMeView()
+                        .navigationBarBackButtonHidden(true)
+                    )
+                    .foregroundColor(.black)
+                    
+                }
+                .cornerRadius(12)
+            }
+            .padding(12)
+            .background( Color(.gray.opacity(0.1))
+            .edgesIgnoringSafeArea(.all))
+        }
+
+    }
+}
+
+
+struct AboutMeView: View {
+    @Environment(\.presentationMode) var presentationMode
+
+    var body: some View {
+        VStack {
+            HStack {
+                Button(action: {
+                        presentationMode.wrappedValue.dismiss()
+                    }) {
+                        Image(systemName: "chevron.backward")
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(Color.black
+                                .opacity(/*@START_MENU_TOKEN@*/0.3/*@END_MENU_TOKEN@*/))
+                            .cornerRadius(60)
+                }
+                Spacer()
+            }
+                
+            VStack(alignment: .center) {
+
+                VStack {
+                    Image("me")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .cornerRadius(100)
+                    
+                    
+                    Text("Evans")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Mutmedia and UI/UX Designer")
+                        .font(.footnote)
+                        .fontWeight(.medium)
+                }
+            }
+            .padding(12)
+
+            Divider()
+            
+            HStack {
+                VStack(alignment: .leading) {
+                            VStack(alignment:.leading){
+                                Text("Email")
+                                    .font(.headline)
+                                    .padding(.bottom, 6
+                                    )
+                                Text("evansalbertus@gmail.com")
+                                    .font(.footnote)
+                            }
+                            .padding(.top, 10)
+                    
+                    VStack(alignment:.leading){
+                        Text("Linkedin")
+                            .font(.headline)
+                            .padding(.bottom, 6
+                            )
+                        Text("https://www.linkedin.com/in/albertus-evans-990158130/")
+                            .font(.footnote)
+                    }
+                    .padding(.top, 10)
+                        
+
+                        VStack(alignment:.leading){
+                            Text("Website")
+                                .font(.headline)
+                                .padding(.bottom, 6
+                                )
+                            Text("https://www.behance.net/evansalbertus")
+                                .font(.footnote)
+                        }
+                        .padding(.top, 10)
+
+                        VStack(alignment:.leading){
+                            Text("About")
+                                .font(.headline)
+                                .padding(.bottom, 6
+                                )
+                            Text("I am a multimedia designer with four years of experience crafting and animating content for social media, as well as conceiving creative concepts for brand campaigns. I am proficient in creative software like Photoshop, Illustrator, After Effect, Premiere Pro and Figma and I am well-versed in UI/UX design principles.")
+                                .font(.footnote)
+                        }
+                    
+                        .padding(.top, 10)
+
+                }
+                Spacer()
+            }
+            
+        }
+        .padding(24)
+        Spacer()
     }
 }
 

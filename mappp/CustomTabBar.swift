@@ -13,7 +13,7 @@ enum Tab: String, CaseIterable {
    case house
    case map
    case star
-   case ellipsis
+   case gearshape
 }
 
 struct MyTabBar: View {

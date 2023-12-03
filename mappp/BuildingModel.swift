@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MapKit
 struct BuildingData: Decodable {
     let language: String
     let version: Int
@@ -49,6 +50,8 @@ struct Building: Identifiable, Decodable {
     let longitude: Double
     let isOpenSaturday: Bool
     let isOpenSunday: Bool
+    
+
 
     private enum CodingKeys: String, CodingKey {
         case buildingId
