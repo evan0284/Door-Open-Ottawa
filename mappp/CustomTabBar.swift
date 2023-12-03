@@ -44,7 +44,7 @@ struct MyTabBar: View {
                     Spacer()
                 }
             }
-            .frame(height: 60) // Adjust the height as needed
+            .frame(height: 60)
             .background(.thinMaterial)
             .cornerRadius(20)
         }

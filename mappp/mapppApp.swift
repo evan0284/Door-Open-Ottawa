@@ -15,7 +15,9 @@ struct mapppApp: App {
     }
     var body: some Scene {
         WindowGroup {
-            ContentView().environmentObject(DataManager())
+            ContentView()
+                .environmentObject(DataManager())
+                .environmentObject(LocationModel())
         }
     }
 }
