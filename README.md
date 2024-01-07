@@ -1,5 +1,5 @@
 
-List of Features
+# List of Features
 
 
 1. Home screen
@@ -38,3 +38,5 @@ List of Features
 
 
 5. Building's Description Screen
+
+![Screenshot 2024-01-07 at 2 05 59 PM](https://github.com/evan0284/Ottawa-Building-Apps/assets/113056572/c630445c-b9ee-463a-b37f-7c4ac739b28b)
