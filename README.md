@@ -1,6 +1,8 @@
+# Overview
+
+Doors Open Ottawa is an annual event where buildings of architectural, historical, cultural, or social significance open their doors to the public for free tours. Your task is to develop an iOS app that leverages a designated API to provide users with information about participating locations, event schedules, and interactive maps.
 
 # List of Features
-
 
 1. Home screen
 - Card view of all the buildings
@@ -38,6 +40,10 @@
 
 
 5. Building's Description Screen
+
+# Tools
+- Swift
+- SwiftUI
 
 ![Screenshot 2024-01-07 at 2 05 47 PM](https://github.com/evan0284/Ottawa-Building-Apps/assets/113056572/94b4be4d-9b6d-4bd4-a436-f683a1b4da8f)
 
